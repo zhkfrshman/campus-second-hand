@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/header :: head"></head>
+<body>
+<div th:replace="fragments/header :: *"></div>
+
+<div class="row">
+    <div class="col-md-8">
+        <h3>发布商品</h3>
+        <form th:action="@{/product/publish}" method="post" enctype="multipart/form-data">
+            <div class="mb-3">
+                <label class="form-label">名称</label>
+                <input class="form-control" name="name" required/>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">价格</label>
+                <input class="form-control" name="price" step="0.01" type="number" required/>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">描述</label>
+                <textarea class="form-control" name="remark"></textarea>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">图片</label>
+                <input class="form-control" type="file" name="imageFile"/>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">发布者 UID（开发阶段手动填写）</label>
+                <input class="form-control" name="uid" type="number"/>
+            </div>
+            <button class="btn btn-primary" type="submit">发布</button>
+        </form>
+    </div>
+</div>
+
+<div th:replace="fragments/footer :: *"></div>
+</body>
+</html>
