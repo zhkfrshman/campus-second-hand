@@ -1,44 +1,100 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <title>商品列表</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
-</head>
-<body>
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" th:href="@{/}">校园二手交易平台</a>
-        <div class="collapse navbar-collapse">
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item"><a class="nav-link" th:href="@{/product/list}">商品</a></li>
-                <li class="nav-item"><a class="nav-link" th:href="@{/logout}">退出登录</a></li>
-            </ul>
-        </div>
-    </div>
-</nav>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
-<div class="container mt-4">
-    <h3>商品列表</h3>
-    <div class="row" th:if="${products != null}">
-        <div class="col-md-3 mb-4" th:each="p : ${products}">
-            <div class="card h-100">
-                <img th:src="@{'/uploads/' + ${p.imagePath}}" class="card-img-top" alt="商品图片" onerror="this.src='/static/images/default.png'">
-                <div class="card-body">
-                    <h5 class="card-title" th:text="${p.name}">商品名称</h5>
-                    <p class="card-text text-muted" th:text="${p.remark}">商品描述</p>
-                    <p class="fw-bold" th:text="'￥' + ${p.price}">价格</p>
-                    <a class="btn btn-outline-primary btn-sm" th:href="@{'/product/' + ${p.id}}">查看详情</a>
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>商品列表</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" />
+</head>
+
+<body>
+    <div th:replace="~{fragments/navbar :: navbar}"></div>
+
+    <div class="container mt-4">
+        <!-- 显示成功消息 -->
+        <div th:if="${message}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <span th:text="${message}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <!-- 搜索框 -->
+        <div class="row mb-4">
+            <div class="col-md-6 offset-md-3">
+                <form action="/product/list" method="get">
+                    <div class="input-group">
+                        <input type="text" class="form-control" name="q" placeholder="搜索商品..." th:value="${param.q}" />
+                        <button class="btn btn-primary" type="submit">搜索</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- 商品列表 -->
+        <div class="row row-cols-1 row-cols-md-3 row-cols-lg-4 g-4">
+            <div class="col" th:each="product : ${products}">
+                <div class="card h-100">
+                    <img th:if="${product.image != null}" th:src="${product.image}" class="card-img-top" alt="商品图片"
+                        style="height: 200px; object-fit: cover;" onerror="this.onerror=null; this.src='/images/default.png';" />
+                    <img th:unless="${product.image != null}" src="/images/default.png" class="card-img-top" alt="默认图片"
+                        style="height: 200px; object-fit: cover;" />
+                    <div class="card-body">
+                        <h5 class="card-title" th:text="${product.name}">商品名称</h5>
+                        <p class="card-text text-danger fw-bold" th:text="'￥' + ${product.price}">价格</p>
+                        <p class="card-text text-truncate" th:text="${product.remark}">商品描述</p>
+                    </div>
+                    <div class="card-footer">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a th:href="@{'/product/' + ${product.id}}" class="btn btn-sm btn-outline-primary">查看详情</a>
+                            <small class="text-muted"
+                                th:text="${#temporals.format(product.createdAt, 'MM-dd')}">发布日期</small>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
+
+        <!-- 分页控件 -->
+        <div class="mt-4 d-flex justify-content-center" th:if="${page != null && page.totalPages > 0}">
+            <nav>
+                <ul class="pagination">
+                    <li class="page-item" th:classappend="${page.number == 0 ? 'disabled' : ''}">
+                        <a class="page-link"
+                            th:href="@{/product/list(page=0, size=${page.size}, q=${param.q})}">&laquo;</a>
+                    </li>
+                    <li class="page-item" th:classappend="${page.number == 0 ? 'disabled' : ''}">
+                        <a class="page-link"
+                            th:href="@{/product/list(page=${page.number - 1}, size=${page.size}, q=${param.q})}">上一页</a>
+                    </li>
+
+                    <li class="page-item" th:each="i : ${#numbers.sequence(0, page.totalPages - 1)}"
+                        th:if="${i >= page.number - 2 && i <= page.number + 2}"
+                        th:classappend="${i == page.number ? 'active' : ''}">
+                        <a class="page-link" th:href="@{/product/list(page=${i}, size=${page.size}, q=${param.q})}"
+                            th:text="${i + 1}">1</a>
+                    </li>
+
+                    <li class="page-item" th:classappend="${page.number + 1 >= page.totalPages ? 'disabled' : ''}">
+                        <a class="page-link"
+                            th:href="@{/product/list(page=${page.number + 1}, size=${page.size}, q=${param.q})}">下一页</a>
+                    </li>
+                    <li class="page-item" th:classappend="${page.number + 1 >= page.totalPages ? 'disabled' : ''}">
+                        <a class="page-link"
+                            th:href="@{/product/list(page=${page.totalPages - 1}, size=${page.size}, q=${param.q})}">&raquo;</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+
+        <!-- 无数据提示 -->
+        <div class="text-center mt-5" th:if="${products == null || products.isEmpty()}">
+            <p class="text-muted">暂无商品数据</p>
+        </div>
     </div>
 
-    <div class="alert alert-info mt-4" th:if="${products == null or #lists.isEmpty(products)}">
-        暂无商品，请稍后再试。
-    </div>
-</div>
-
+    <!-- 添加Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>

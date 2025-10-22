@@ -38,6 +38,17 @@ public class Product {
         if(display==null) display=1;
         if(sales==null) sales=0;
     }
+
+    @Transient
+    public String getImagePath() {
+        return this.image;
+    }
+    
+    @Transient
+    public void setImagePath(String path) {
+        this.image = path;
+    }
+    
     @PreUpdate
     public void preUpdate(){ updatedAt = LocalDateTime.now(); }
 }

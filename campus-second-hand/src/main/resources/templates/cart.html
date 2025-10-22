@@ -1,38 +1,131 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head th:replace="fragments/header :: head"></head>
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>购物车</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" />
+</head>
+
 <body>
-<div th:replace="fragments/header :: *"></div>
+    <div th:replace="~{fragments/navbar :: navbar}"></div>
 
-<div class="row">
-    <div class="col-md-8">
-        <h3>发布商品</h3>
-        <form th:action="@{/product/publish}" method="post" enctype="multipart/form-data">
-            <div class="mb-3">
-                <label class="form-label">名称</label>
-                <input class="form-control" name="name" required/>
+    <div class="container mt-4">
+        <h3>我的购物车</h3>
+
+        <div class="alert alert-info" th:if="${cartItems == null || cartItems.empty}">
+            购物车是空的，<a th:href="@{/product/list}" class="alert-link">去选购商品</a>
+        </div>
+
+        <div class="card mb-4" th:if="${cartItems != null && !cartItems.empty}">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>商品</th>
+                                <th>价格</th>
+                                <th>数量</th>
+                                <th>小计</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="item : ${cartItems}">
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <img th:if="${productMap.containsKey(item.sid) && productMap.get(item.sid).image != null}"
+                                            th:src="${productMap.get(item.sid).image}" alt="商品图片"
+                                            style="width: 50px; height: 50px; object-fit: cover;" class="me-3"
+                                            onerror="this.src='/images/default.png'">
+                                        <img th:unless="${productMap.containsKey(item.sid) && productMap.get(item.sid).image != null}"
+                                            src="/images/default.png" alt="默认图片"
+                                            style="width: 50px; height: 50px; object-fit: cover;" class="me-3">
+                                        <div>
+                                            <a th:if="${productMap.containsKey(item.sid)}"
+                                                th:href="@{'/product/' + ${item.sid}}"
+                                                th:text="${productMap.get(item.sid).name}">商品名称</a>
+                                            <span th:unless="${productMap.containsKey(item.sid)}">未知商品</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td
+                                    th:text="${productMap.containsKey(item.sid) ? '￥' + productMap.get(item.sid).price : '￥0.00'}">
+                                    价格</td>
+                                <td>
+                                    <div class="input-group" style="width: 120px;">
+                                        <button class="btn btn-outline-secondary btn-sm qty-btn" type="button"
+                                            data-action="decrease">-</button>
+                                        <input type="text" class="form-control form-control-sm text-center qty-input"
+                                            th:value="${item.quantity}" th:data-id="${item.id}" readonly>
+                                        <button class="btn btn-outline-secondary btn-sm qty-btn" type="button"
+                                            data-action="increase">+</button>
+                                    </div>
+                                </td>
+                                <td
+                                    th:text="${productMap.containsKey(item.sid) ? '￥' + (productMap.get(item.sid).price * item.quantity) : '￥0.00'}">
+                                    小计</td>
+                                <td>
+                                    <a th:href="@{'/cart/remove/' + ${item.id}}" class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-trash"></i> 删除
+                                    </a>
+                                </td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="3" class="text-end fw-bold">总计:</td>
+                                <td colspan="2" class="fw-bold" th:text="'￥' + ${total}">总计金额</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
             </div>
-            <div class="mb-3">
-                <label class="form-label">价格</label>
-                <input class="form-control" name="price" step="0.01" type="number" required/>
+            <div class="card-footer d-flex justify-content-between">
+                <a th:href="@{/product/list}" class="btn btn-outline-primary">继续购物</a>
+                <a th:href="@{/order/checkout}" class="btn btn-success">去结算</a>
             </div>
-            <div class="mb-3">
-                <label class="form-label">描述</label>
-                <textarea class="form-control" name="remark"></textarea>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">图片</label>
-                <input class="form-control" type="file" name="imageFile"/>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">发布者 UID（开发阶段手动填写）</label>
-                <input class="form-control" name="uid" type="number"/>
-            </div>
-            <button class="btn btn-primary" type="submit">发布</button>
-        </form>
+        </div>
     </div>
-</div>
 
-<div th:replace="fragments/footer :: *"></div>
+    <!-- 添加Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // 数量增减按钮
+            const qtyButtons = document.querySelectorAll('.qty-btn');
+            qtyButtons.forEach(btn => {
+                btn.addEventListener('click', async function () {
+                    const action = this.getAttribute('data-action');
+                    const input = this.parentNode.querySelector('.qty-input');
+                    const itemId = input.getAttribute('data-id');
+                    let qty = parseInt(input.value);
+
+                    if (action === 'decrease' && qty > 1) {
+                        qty -= 1;
+                    } else if (action === 'increase') {
+                        qty += 1;
+                    }
+
+                    // 更新购物车数量
+                    try {
+                        const response = await fetch(`/cart/update/${itemId}?qty=${qty}`, {
+                            method: 'POST'
+                        });
+
+                        if (response.ok) {
+                            window.location.reload();
+                        }
+                    } catch (error) {
+                        console.error('更新失败:', error);
+                    }
+                });
+            });
+        });
+    </script>
 </body>
+
 </html>

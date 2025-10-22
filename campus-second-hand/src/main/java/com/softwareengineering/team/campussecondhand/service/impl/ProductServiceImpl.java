@@ -9,6 +9,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 @Service
 public class ProductServiceImpl implements ProductService {
 
@@ -49,5 +51,36 @@ public class ProductServiceImpl implements ProductService {
         }
         p.setDisplay(1);
         return productRepository.save(p);
+    }
+
+    @Override
+    public List<Product> findAllActiveProducts() {
+        return productRepository.findByDisplayOrderByCreatedAtDesc(true);
+    }
+
+    @Override
+    @Transactional
+    public Product saveProduct(Product product) {
+        // 确保设置了必要的字段
+        if (product.getDisplay() == null) {
+            product.setDisplay(1); // 1表示展示，0表示不展示
+        }
+        if (product.getSortOrder() == null) {
+            product.setSortOrder(0);
+        }
+        if (product.getCount() == null) {
+            product.setCount(1);
+        }
+        if (product.getSales() == null) {
+            product.setSales(0);
+        }
+        
+        // 保存商品
+        return productRepository.save(product);
+    }
+    
+    @Override
+    public List<Product> findByUserId(Long userId) {
+        return productRepository.findByUid(userId);
     }
 }

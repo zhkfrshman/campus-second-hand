@@ -51,4 +51,23 @@ public class UserServiceImpl implements UserService {
     public User findById(Long id) {
         return userRepository.findById(id).orElse(null);
     }
+    
+    @Override
+    @Transactional
+    public User updateUser(User user) {
+        if (user == null || user.getId() == null) {
+            throw new IllegalArgumentException("用户信息不完整");
+        }
+        
+        // 检查用户是否存在
+        User existingUser = userRepository.findById(user.getId())
+            .orElseThrow(() -> new RuntimeException("用户不存在"));
+        
+        // 手机号不能修改，其他信息可以修改
+        user.setPhone(existingUser.getPhone());
+        user.setCreatedAt(existingUser.getCreatedAt());
+        
+        // 保存更新的用户信息
+        return userRepository.save(user);
+    }
 }
