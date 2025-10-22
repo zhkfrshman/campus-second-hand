@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>订单结算</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" />
+</head>
+
+<body>
+    <div th:replace="~{fragments/navbar :: navbar}"></div>
+
+    <div class="container mt-4">
+        <h3>订单结算</h3>
+
+        <!-- 错误提示 -->
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        确认商品信息
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>商品</th>
+                                        <th>单价</th>
+                                        <th>数量</th>
+                                        <th>小计</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="item : ${cartItems}">
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <img th:if="${productMap.containsKey(item.sid) && productMap.get(item.sid).image != null}"
+                                                    th:src="${productMap.get(item.sid).image}" alt="商品图片"
+                                                    style="width: 50px; height: 50px; object-fit: cover;" class="me-3"
+                                                    onerror="this.src='/images/default.png'">
+                                                <img th:unless="${productMap.containsKey(item.sid) && productMap.get(item.sid).image != null}"
+                                                    src="/images/default.png" alt="默认图片"
+                                                    style="width: 50px; height: 50px; object-fit: cover;" class="me-3">
+                                                <div>
+                                                    <span th:if="${productMap.containsKey(item.sid)}"
+                                                        th:text="${productMap.get(item.sid).name}">商品名称</span>
+                                                    <span th:unless="${productMap.containsKey(item.sid)}">未知商品</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td
+                                            th:text="${productMap.containsKey(item.sid) ? '￥' + productMap.get(item.sid).price : '￥0.00'}">
+                                            价格</td>
+                                        <td th:text="${item.quantity}">数量</td>
+                                        <td
+                                            th:text="${productMap.containsKey(item.sid) ? '￥' + (productMap.get(item.sid).price * item.quantity) : '￥0.00'}">
+                                            小计</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header">
+                        收货信息
+                    </div>
+                    <div class="card-body">
+                        <form id="orderForm" th:action="@{/order/submit}" method="post">
+                            <div class="mb-3 row">
+                                <label class="col-sm-3 col-form-label">收件人</label>
+                                <div class="col-sm-9">
+                                    <input type="text" class="form-control" name="contactName"
+                                        th:value="${user.realName}" required />
+                                </div>
+                            </div>
+                            <div class="mb-3 row">
+                                <label class="col-sm-3 col-form-label">联系电话</label>
+                                <div class="col-sm-9">
+                                    <input type="text" class="form-control" name="phone" th:value="${user.phone}"
+                                        required />
+                                </div>
+                            </div>
+                            <div class="mb-3 row">
+                                <label class="col-sm-3 col-form-label">收货地址</label>
+                                <div class="col-sm-9">
+                                    <input type="text" class="form-control" name="address" th:value="${user.dormitory}"
+                                        required />
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        订单金额
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-3">
+                            <span>商品总价</span>
+                            <span class="text-primary" th:text="'￥' + ${total}">￥0.00</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-3">
+                            <span>运费</span>
+                            <span>￥0.00</span>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between mb-3 fw-bold">
+                            <span>实付款</span>
+                            <span class="text-danger" th:text="'￥' + ${total}">￥0.00</span>
+                        </div>
+                        <div class="d-grid">
+                            <button class="btn btn-primary"
+                                onclick="document.getElementById('orderForm').submit();">提交订单</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>
