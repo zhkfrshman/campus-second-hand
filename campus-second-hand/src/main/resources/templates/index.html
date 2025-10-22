@@ -1,32 +1,32 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>校园二手交易平台</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <title>华科二手交易平台</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" />
 </head>
+
 <body>
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" th:href="@{/}">校园二手交易平台</a>
-        <div class="collapse navbar-collapse">
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item"><a class="nav-link" th:href="@{/product/list}">商品</a></li>
-                <li class="nav-item"><a class="nav-link" th:href="@{/login}">登录</a></li>
-                <li class="nav-item"><a class="nav-link" th:href="@{/register}">注册</a></li>
-            </ul>
+    <!-- 使用导航栏片段 -->
+    <div th:replace="~{fragments/navbar :: navbar}"></div>
+
+    <div class="container mt-4">
+        <div class="text-center">
+            <h2>欢迎来到华科二手交易平台</h2>
+            <p>在这里你可以浏览、发布和购买校园二手物品。</p>
+            <div class="d-flex justify-content-center gap-3">
+                <a class="btn btn-primary" th:href="@{/product/list}">浏览商品</a>
+                <a class="btn btn-success" th:href="@{/product/add}" sec:authorize="isAuthenticated()">发布商品</a>
+                <a class="btn btn-outline-secondary" th:href="@{/login}" sec:authorize="!isAuthenticated()">登录后发布</a>
+            </div>
         </div>
     </div>
-</nav>
 
-<div class="container mt-4">
-    <div class="text-center">
-        <h2>欢迎来到校园二手交易平台</h2>
-        <p>在这里你可以浏览、发布和购买校园二手物品。</p>
-        <a class="btn btn-primary" th:href="@{/product/list}">去看看商品</a>
-    </div>
-</div>
-
+    <!-- 添加Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>

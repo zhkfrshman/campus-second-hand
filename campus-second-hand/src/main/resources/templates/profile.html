@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="fragments/header :: head"></head>
+
+<body>
+    <div th:replace="fragments/navbar :: navbar"></div>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">个人信息</div>
+                    <div class="card-body">
+                        <div class="text-center mb-3">
+                            <img th:src="${user.avatar == null ? '/images/avatar-default.png' : user.avatar}" alt="头像"
+                                class="img-thumbnail rounded-circle" style="width: 120px; height: 120px;" />
+                        </div>
+
+                        <dl class="row">
+                            <dt class="col-sm-4">用户名</dt>
+                            <dd class="col-sm-8" th:text="${user.username}">用户名</dd>
+
+                            <dt class="col-sm-4">手机号</dt>
+                            <dd class="col-sm-8" th:text="${user.phone}">手机号</dd>
+
+                            <dt class="col-sm-4" th:if="${user.sno != null}">学号</dt>
+                            <dd class="col-sm-8" th:if="${user.sno != null}" th:text="${user.sno}">学号</dd>
+
+                            <dt class="col-sm-4" th:if="${user.dormitory != null}">宿舍</dt>
+                            <dd class="col-sm-8" th:if="${user.dormitory != null}" th:text="${user.dormitory}">宿舍</dd>
+                        </dl>
+
+                        <a class="btn btn-outline-primary btn-sm" th:href="@{/profile/edit}">编辑个人信息</a>
+                    </div>
+                </div>
+
+                <div class="card mt-3">
+                    <div class="card-header">账户安全</div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a class="btn btn-outline-secondary btn-sm" th:href="@{/profile/password}">修改密码</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-8">
+                <ul class="nav nav-tabs" id="myTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="products-tab" data-bs-toggle="tab"
+                            data-bs-target="#products">我发布的商品</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="cart-tab" data-bs-toggle="tab"
+                            data-bs-target="#cart">我的购物车</button>
+                    </li>
+                </ul>
+
+                <div class="tab-content p-3 border border-top-0 rounded-bottom">
+                    <div class="tab-pane fade show active" id="products">
+                        <div th:if="${myProducts != null && !myProducts.empty}">
+                            <div class="list-group">
+                                <a th:each="p : ${myProducts}" th:href="@{'/product/' + ${p.id}}"
+                                    class="list-group-item list-group-item-action">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h5 class="mb-1" th:text="${p.name}">商品名称</h5>
+                                        <small th:text="'￥' + ${p.price}">价格</small>
+                                    </div>
+                                    <p class="mb-1 text-truncate" th:text="${p.remark}">商品描述</p>
+                                    <small th:text="${#dates.format(p.createTime, 'yyyy-MM-dd')}">发布时间</small>
+                                </a>
+                            </div>
+                        </div>
+                        <div th:if="${myProducts == null || myProducts.empty}" class="alert alert-light">
+                            你还没有发布过商品
+                            <a th:href="@{/product/add}" class="alert-link">去发布一个</a>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="cart">
+                        <div th:if="${cartItems != null && !cartItems.empty}">
+                            <div class="list-group">
+                                <div th:each="item : ${cartItems}" class="list-group-item">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h5 th:text="${item.product.name}">商品名称</h5>
+                                            <p class="mb-1">
+                                                <span th:text="'￥' + ${item.product.price}">价格</span>
+                                                <span class="text-muted" th:text="'x' + ${item.quantity}">数量</span>
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <a th:href="@{'/cart/remove/' + ${item.id}}"
+                                                class="btn btn-sm btn-outline-danger">
+                                                <i class="bi bi-trash"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div th:if="${cartItems == null || cartItems.empty}" class="alert alert-light">
+                            购物车是空的
+                            <a th:href="@{/product/list}" class="alert-link">去选购</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="fragments/footer :: footer"></div>
+</body>
+
+</html>

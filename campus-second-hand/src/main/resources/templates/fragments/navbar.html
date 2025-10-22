@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head>
+    <meta charset="UTF-8">
+</head>
+
+<body>
+    <nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" th:href="@{/}">华科二手交易平台</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarContent">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link" th:href="@{/}">首页</a></li>
+                    <li class="nav-item"><a class="nav-link" th:href="@{/product/list}">商品浏览</a></li>
+                    <li class="nav-item" sec:authorize="isAuthenticated()">
+                        <a class="nav-link" th:href="@{/product/add}">发布商品</a>
+                    </li>
+                </ul>
+
+                <!-- 根据登录状态显示不同内容 -->
+                <ul class="navbar-nav ms-auto">
+                    <!-- 已登录状态 -->
+                    <li class="nav-item dropdown" sec:authorize="isAuthenticated()">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
+                            data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle me-1"></i>
+                            <span sec:authentication="name">用户名</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" th:href="@{/profile}">个人信息</a></li>
+                            <li><a class="dropdown-item" th:href="@{/cart}">购物车</a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item" th:href="@{/logout}">退出登录</a></li>
+                        </ul>
+                    </li>
+
+                    <!-- 未登录状态 -->
+                    <li class="nav-item" sec:authorize="!isAuthenticated()">
+                        <a class="nav-link" th:href="@{/login}">登录</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="!isAuthenticated()">
+                        <a class="nav-link" th:href="@{/register}">注册</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+</body>
+
+</html>

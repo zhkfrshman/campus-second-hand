@@ -38,7 +38,8 @@ public class ProductController {
         m.addAttribute("page", pg);
         return "product-list";
     }
-
+    
+    
     @GetMapping("/{id}")
     public String detail(@PathVariable Long id, Model m) {
         var p = productService.findById(id);
