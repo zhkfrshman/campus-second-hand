@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>订单详情</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+</head>
+
+<body>
+    <div th:replace="~{fragments/navbar :: navbar}"></div>
+
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4>订单详情</h4>
+            <div>
+                <span class="badge bg-warning" th:if="${order.status == 0}">待付款</span>
+                <span class="badge bg-info" th:if="${order.status == 1}">待发货</span>
+                <span class="badge bg-primary" th:if="${order.status == 2}">待收货</span>
+                <span class="badge bg-success" th:if="${order.status == 3}">已完成</span>
+                <span class="badge bg-secondary" th:if="${order.status == -1}">已取消</span>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-body">
+                <p class="mb-1">订单号：<span th:text="${order.id}">0</span></p>
+                <p class="mb-1">下单时间：<span
+                        th:text="${#temporals.format(order.createdAt, 'yyyy-MM-dd HH:mm:ss')}">time</span></p>
+                <p class="mb-1">收件人：<span th:text="${order.contactName}">收件人</span></p>
+                <p class="mb-1">电话：<span th:text="${order.phone}">电话</span></p>
+                <p class="mb-0">地址：<span th:text="${order.address}">地址</span></p>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header">商品信息</div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>商品</th>
+                                <th>单价</th>
+                                <th>数量</th>
+                                <th>小计</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="it : ${items}">
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <img th:if="${it.productImage != null}" th:src="${it.productImage}"
+                                            onerror="this.src='/images/default.png'"
+                                            style="width:40px;height:40px;object-fit:cover" class="me-2" alt="">
+                                        <img th:unless="${it.productImage != null}" src="/images/default.png"
+                                            style="width:40px;height:40px;object-fit:cover" class="me-2" alt="">
+                                        <span th:text="${it.productName}">商品</span>
+                                    </div>
+                                </td>
+                                <td th:text="'￥' + ${it.price}">￥0.00</td>
+                                <td th:text="${it.quantity}">1</td>
+                                <td th:text="'￥' + ${it.price * it.quantity}">￥0.00</td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="3" class="text-end fw-bold">总计：</td>
+                                <td class="fw-bold" th:text="'￥' + ${order.totalAmount}">￥0.00</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between">
+            <a th:href="@{/order/list}" class="btn btn-outline-secondary">返回订单列表</a>
+
+            <div>
+                <a th:if="${order.status == 0}" th:href="@{'/order/pay/' + ${order.id}}" class="btn btn-primary">去支付</a>
+                <a th:if="${order.status != 0}" th:href="@{/product/list}" class="btn btn-outline-primary">继续购物</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

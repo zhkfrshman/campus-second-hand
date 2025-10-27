@@ -1,7 +1,12 @@
 package com.softwareengineering.team.campussecondhand.controller;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
+import com.softwareengineering.team.campussecondhand.entity.Order;
 import com.softwareengineering.team.campussecondhand.entity.Product;
 import com.softwareengineering.team.campussecondhand.entity.User;
+import com.softwareengineering.team.campussecondhand.entity.UserPassword;
+import com.softwareengineering.team.campussecondhand.repository.OrderRepository;
+import com.softwareengineering.team.campussecondhand.repository.UserPasswordRepository;
 import com.softwareengineering.team.campussecondhand.service.ProductService;
 import com.softwareengineering.team.campussecondhand.service.UserService;
 import org.springframework.security.core.Authentication;
@@ -17,67 +22,108 @@ import java.util.List;
 public class ProfileController {
     private final UserService userService;
     private final ProductService productService;
-    
-    public ProfileController(UserService userService, ProductService productService) {
+    private final OrderRepository orderRepository;
+    private final UserPasswordRepository userPasswordRepository;
+    private final PasswordEncoder passwordEncoder;
+
+    public ProfileController(UserService userService,
+                             ProductService productService,
+                             OrderRepository orderRepository,
+                             UserPasswordRepository userPasswordRepository,
+                             PasswordEncoder passwordEncoder) {
         this.userService = userService;
         this.productService = productService;
+        this.orderRepository = orderRepository;
+        this.userPasswordRepository = userPasswordRepository;
+        this.passwordEncoder = passwordEncoder;
     }
-    
+
     @GetMapping
     public String profile(Authentication authentication, Model model) {
-        if (authentication == null) {
-            return "redirect:/login";
-        }
-        
+        if (authentication == null) return "redirect:/login";
         User user = userService.findByPhone(authentication.getName());
-        if (user == null) {
-            return "redirect:/login";
-        }
-        
-        // 加载用户发布的商品
+        if (user == null) return "redirect:/login";
+
         List<Product> products = productService.findByUserId(user.getId());
-        
+        List<Order> orders = orderRepository.findByUidOrderByCreatedAtDesc(user.getId());
+
         model.addAttribute("user", user);
-        model.addAttribute("products", products);
-        
+        model.addAttribute("myProducts", products);
+        model.addAttribute("orders", orders);
         return "profile";
     }
-    
-    @PostMapping("/update")
-    public String updateProfile(
-            Authentication authentication,
-            @RequestParam(required = false) String username,
-            @RequestParam(required = false) String realName,
-            @RequestParam(required = false) String sno,
-            @RequestParam(required = false) String dormitory,
-            RedirectAttributes redirectAttributes) {
-        
-        if (authentication == null) {
-            return "redirect:/login";
-        }
-        
+
+    // 编辑页 GET 映射：渲染 profile-edit.html，需要放入 user
+    @GetMapping("/edit")
+    public String editPage(Authentication authentication, Model model) {
+        if (authentication == null) return "redirect:/login";
         User user = userService.findByPhone(authentication.getName());
-        if (user == null) {
-            return "redirect:/login";
-        }
-        
-        // 更新用户信息
-        if (username != null && !username.isBlank()) {
-            user.setUsername(username);
-        }
-        if (realName != null) {
-            user.setRealName(realName);
-        }
-        if (sno != null) {
-            user.setSno(sno);
-        }
-        if (dormitory != null) {
-            user.setDormitory(dormitory);
-        }
-        
+        if (user == null) return "redirect:/login";
+        model.addAttribute("user", user);
+        return "profile-edit";
+    }
+
+    // 保存编辑 POST 映射：表单提交到 /profile/edit
+    @PostMapping("/edit")
+    public String editSave(Authentication authentication,
+                           @RequestParam String username,
+                           @RequestParam(required = false) String sno,
+                           @RequestParam(required = false) String dormitory,
+                           RedirectAttributes ra) {
+        if (authentication == null) return "redirect:/login";
+        User user = userService.findByPhone(authentication.getName());
+        if (user == null) return "redirect:/login";
+
+        if (username != null && !username.isBlank()) user.setUsername(username);
+        user.setSno(sno);
+        user.setDormitory(dormitory);
         userService.updateUser(user);
-        
-        redirectAttributes.addFlashAttribute("message", "个人信息更新成功");
+
+        ra.addFlashAttribute("message", "个人信息更新成功");
+        return "redirect:/profile";
+    }
+
+    @GetMapping("/password")
+    public String passwordPage() {
+        return "profile-password";
+    }
+
+    @PostMapping("/password")
+    public String changePassword(Authentication authentication,
+                                 @RequestParam String currentPassword,
+                                 @RequestParam String newPassword,
+                                 @RequestParam String confirmPassword,
+                                 RedirectAttributes ra) {
+        if (authentication == null) return "redirect:/login";
+        User user = userService.findByPhone(authentication.getName());
+        if (user == null) return "redirect:/login";
+
+        if (newPassword == null || newPassword.length() < 6) {
+            ra.addFlashAttribute("error", "新密码长度至少6位");
+            return "redirect:/profile/password";
+        }
+        if (!newPassword.equals(confirmPassword)) {
+            ra.addFlashAttribute("error", "两次输入的新密码不一致");
+            return "redirect:/profile/password";
+        }
+
+        // 从 user_password 表获取哈希并校验
+        var upOpt = userPasswordRepository.findByUid(user.getId());
+        if (upOpt.isEmpty()) {
+            ra.addFlashAttribute("error", "账户未设置密码，无法校验当前密码");
+            return "redirect:/profile/password";
+        }
+        UserPassword up = upOpt.get();
+        if (!passwordEncoder.matches(currentPassword, up.getPasswordHash())) {
+            ra.addFlashAttribute("error", "当前密码不正确");
+            return "redirect:/profile/password";
+        }
+
+        // 更新为新密码
+        up.setPasswordHash(passwordEncoder.encode(newPassword));
+        userPasswordRepository.save(up);
+
+        ra.addFlashAttribute("message", "密码已更新");
         return "redirect:/profile";
     }
 }

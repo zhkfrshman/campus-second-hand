@@ -122,9 +122,21 @@
                             <span class="text-danger" th:text="'￥' + ${total}">￥0.00</span>
                         </div>
                         <div class="d-grid">
-                            <button class="btn btn-primary"
-                                onclick="document.getElementById('orderForm').submit();">提交订单</button>
+                            <button type="button" class="btn btn-primary" id="submitOrderBtn">提交订单</button>
                         </div>
+                        <script>
+                            document.getElementById('submitOrderBtn').addEventListener('click', function () {
+                                const form = document.getElementById('orderForm');
+                                // 浏览器校验
+                                if (form.reportValidity()) {
+                                    if (typeof form.requestSubmit === 'function') {
+                                        form.requestSubmit();
+                                    } else {
+                                        form.submit();
+                                    }
+                                }
+                            });
+                        </script>
                     </div>
                 </div>
             </div>

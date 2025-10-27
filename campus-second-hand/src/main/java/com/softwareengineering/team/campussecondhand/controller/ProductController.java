@@ -125,23 +125,41 @@ public class ProductController {
         return "product-detail";
     }
 
-    // @GetMapping("/publish")
-    // public String publishPage() { return "publish"; }
+    @PostMapping("/{id}/off")
+    public String off(@PathVariable Long id, Authentication auth, RedirectAttributes ra) {
+        if (auth == null) return "redirect:/login";
+        User user = userService.findByPhone(auth.getName());
+        if (user == null) return "redirect:/login";
 
-    // @PostMapping("/publish")
-    // public String publish(@RequestParam String name,
-    //                       @RequestParam Double price,
-    //                       @RequestParam(required = false) String remark,
-    //                       @RequestParam(required = false) MultipartFile imageFile,
-    //                       @RequestParam(required = false) Long uid,
-    //                       RedirectAttributes redirectAttributes) {
-    //     try {
-    //         productService.createProduct(name, price, remark, imageFile, uid);
-    //         redirectAttributes.addFlashAttribute("message", "商品发布成功！");
-    //     } catch (Exception e) {
-    //         redirectAttributes.addFlashAttribute("error", "商品发布失败：" + e.getMessage());
-    //         e.printStackTrace();
-    //     }
-    //     return "redirect:/product/list";
-    // }
+        Product p = productService.findById(id);
+        if (p == null) { ra.addFlashAttribute("error", "商品不存在"); return "redirect:/profile"; }
+        if (!p.getUid().equals(user.getId())) { ra.addFlashAttribute("error", "无权操作该商品"); return "redirect:/profile"; }
+
+        p.setStatus(0);
+        p.setDisplay(0); // 兼容旧逻辑
+        productService.saveProduct(p);
+        ra.addFlashAttribute("message", "已下架");
+        return "redirect:/profile";
+    }
+
+    @PostMapping("/{id}/on")
+    public String on(@PathVariable Long id, Authentication auth, RedirectAttributes ra) {
+        if (auth == null) return "redirect:/login";
+        User user = userService.findByPhone(auth.getName());
+        if (user == null) return "redirect:/login";
+
+        Product p = productService.findById(id);
+        if (p == null) { ra.addFlashAttribute("error", "商品不存在"); return "redirect:/profile"; }
+        if (!p.getUid().equals(user.getId())) { ra.addFlashAttribute("error", "无权操作该商品"); return "redirect:/profile"; }
+        if (p.getCount() == null || p.getCount() <= 0) {
+            ra.addFlashAttribute("error", "库存为0，无法上架");
+            return "redirect:/profile";
+        }
+
+        p.setStatus(1);
+        p.setDisplay(1); // 兼容旧逻辑
+        productService.saveProduct(p);
+        ra.addFlashAttribute("message", "已上架");
+        return "redirect:/profile";
+    }
 }

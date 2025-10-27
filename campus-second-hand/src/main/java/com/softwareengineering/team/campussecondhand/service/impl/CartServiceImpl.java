@@ -47,7 +47,6 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public void clearCart(Long uid) {
-        var items = cartItemRepository.findByUid(uid);
-        cartItemRepository.deleteAll(items);
+        cartItemRepository.deleteByUid(uid);
     }
 }

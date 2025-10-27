@@ -28,7 +28,8 @@ public class Product {
     private String image;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-
+    @Column(nullable = false)
+    private Integer status; 
     @PrePersist
     public void prePersist(){
         createdAt = LocalDateTime.now();
@@ -37,6 +38,8 @@ public class Product {
         if(count==null) count=1;
         if(display==null) display=1;
         if(sales==null) sales=0;
+        if (status == null) status = 1;
+        if (sortOrder == null) sortOrder = 0;
     }
 
     @Transient

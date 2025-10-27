@@ -11,6 +11,10 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     Page<Product> findByDisplay(Integer display, Pageable pageable);
     Page<Product> findByNameContainingAndDisplay(String name, Integer display, Pageable pageable);
     List<Product> findByUid(Long uid);
+
+    // 新增：仅查上架且库存>0（用于商品列表）
+    Page<Product> findByStatusAndCountGreaterThan(Integer status, Integer count, Pageable pageable);
+
     default List<Product> findByDisplayOrderByCreatedAtDesc(boolean display) {
         return findByDisplay(display ? 1 : 0, org.springframework.data.domain.PageRequest.of(0, 1000, 
                org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "createdAt")))
