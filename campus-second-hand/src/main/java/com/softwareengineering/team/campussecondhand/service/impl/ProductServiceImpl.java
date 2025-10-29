@@ -22,11 +22,23 @@ public class ProductServiceImpl implements ProductService {
         this.productRepository = productRepository;
         this.fileStorageUtil = fileStorageUtil;
     }
-
+    
     @Override
     public Page<Product> listAvailable(int page, int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        return productRepository.findByDisplay(1, pageable);
+        return listAvailable(page, size, null);
+    }
+    
+    @Override
+    public Page<Product> listAvailable(int page, int size, String q) {
+        // 防御：页码与大小
+        int p = Math.max(page, 0);
+        int s = size <= 0 ? 8 : size;
+        Pageable pageable = PageRequest.of(p, s, Sort.by(Sort.Direction.DESC, "id")); // 没有 createdAt 就按 id
+
+        if (q == null || q.trim().isEmpty()) {
+            return productRepository.findByDisplayAndCountGreaterThan(1, 0, pageable);
+        }
+        return productRepository.searchAvailable(q.trim(), pageable);
     }
 
     @Override

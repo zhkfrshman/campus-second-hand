@@ -57,7 +57,6 @@
                         <button class="nav-link" id="cart-tab" data-bs-toggle="tab" data-bs-target="#cart" type="button"
                             role="tab">购物车</button>
                     </li>
-                    <!-- 新增“我的订单”标签 -->
                     <li class="nav-item" role="presentation">
                         <button class="nav-link" id="orders-tab" data-bs-toggle="tab" data-bs-target="#orders"
                             type="button" role="tab">我的订单</button>
@@ -67,7 +66,7 @@
                 <div class="tab-content p-3 border border-top-0 rounded-bottom">
                     <!-- 我的商品 -->
                     <div class="tab-pane fade show active" id="products">
-                        <div th:if="${myProducts != null && !myProducts.empty}">
+                        <div th:if="${myProducts != null and !#lists.isEmpty(myProducts)}"><!-- 修改 -->
                             <div class="row row-cols-1 row-cols-md-3 g-4">
                                 <div class="col" th:each="product : ${myProducts}">
                                     <div class="card h-100">
@@ -85,14 +84,15 @@
                                 </div>
                             </div>
                         </div>
-                        <div th:if="${myProducts == null || myProducts.empty}" class="alert alert-light">
+                        <div th:if="${myProducts == null or #lists.isEmpty(myProducts)}" class="alert alert-light">
+                            <!-- 修改 -->
                             您还没有发布任何商品，<a th:href="@{/product/add}" class="alert-link">去发布</a>
                         </div>
                     </div>
 
-                    <!-- 购物车（改为使用 cartProductMap，避免在模板中直接调服务） -->
+                    <!-- 购物车 -->
                     <div class="tab-pane fade" id="cart">
-                        <div th:if="${cartItems != null && !cartItems.empty}">
+                        <div th:if="${cartItems != null and !#lists.isEmpty(cartItems)}"><!-- 修改 -->
                             <div class="table-responsive">
                                 <table class="table">
                                     <thead>
@@ -107,25 +107,25 @@
                                         <tr th:each="item : ${cartItems}">
                                             <td>
                                                 <div class="d-flex align-items-center">
-                                                    <img th:if="${cartProductMap != null && cartProductMap.containsKey(item.sid) && cartProductMap.get(item.sid).image != null}"
+                                                    <img th:if="${cartProductMap != null and cartProductMap.containsKey(item.sid) and cartProductMap.get(item.sid).image != null}"
                                                         th:src="${cartProductMap.get(item.sid).image}" alt="商品图片"
                                                         style="width: 50px; height: 50px; object-fit: cover;"
                                                         class="me-2" onerror="this.src='/images/default.png'">
-                                                    <img th:unless="${cartProductMap != null && cartProductMap.containsKey(item.sid) && cartProductMap.get(item.sid).image != null}"
+                                                    <img th:unless="${cartProductMap != null and cartProductMap.containsKey(item.sid) and cartProductMap.get(item.sid).image != null}"
                                                         src="/images/default.png" alt="默认图片"
                                                         style="width: 50px; height: 50px; object-fit: cover;"
                                                         class="me-2">
                                                     <div>
-                                                        <a th:if="${cartProductMap != null && cartProductMap.containsKey(item.sid)}"
+                                                        <a th:if="${cartProductMap != null and cartProductMap.containsKey(item.sid)}"
                                                             th:href="@{'/product/' + ${item.sid}}"
                                                             th:text="${cartProductMap.get(item.sid).name}">商品名称</a>
                                                         <span
-                                                            th:unless="${cartProductMap != null && cartProductMap.containsKey(item.sid)}">未知商品</span>
+                                                            th:unless="${cartProductMap != null and cartProductMap.containsKey(item.sid)}">未知商品</span>
                                                     </div>
                                                 </div>
                                             </td>
                                             <td
-                                                th:text="${cartProductMap != null && cartProductMap.containsKey(item.sid) ? '￥' + cartProductMap.get(item.sid).price : '￥0.00'}">
+                                                th:text="${cartProductMap != null and cartProductMap.containsKey(item.sid) ? '￥' + cartProductMap.get(item.sid).price : '￥0.00'}">
                                                 价格</td>
                                             <td th:text="${item.quantity}">数量</td>
                                             <td>
@@ -142,24 +142,25 @@
                                 <a th:href="@{/cart}" class="btn btn-primary">去购物车结算</a>
                             </div>
                         </div>
-                        <div th:if="${cartItems == null || cartItems.empty}" class="alert alert-light">
+                        <div th:if="${cartItems == null or #lists.isEmpty(cartItems)}" class="alert alert-light">
+                            <!-- 修改 -->
                             您的购物车是空的，<a th:href="@{/product/list}" class="alert-link">去购物</a>
                         </div>
                     </div>
 
-                    <!-- 新增：我的订单 -->
+                    <!-- 我的订单 -->
                     <div class="tab-pane fade" id="orders">
-                        <div th:if="${orders == null || orders.isEmpty()}" class="alert alert-light">
+                        <div th:if="${orders == null or #lists.isEmpty(orders)}" class="alert alert-light"><!-- 统一写法 -->
                             暂无订单，<a th:href="@{/product/list}" class="alert-link">去逛逛</a>
                         </div>
 
-                        <div th:if="${orders != null && !orders.isEmpty()}">
+                        <div th:if="${orders != null and !#lists.isEmpty(orders)}"><!-- 统一写法 -->
                             <div class="list-group">
                                 <a class="list-group-item list-group-item-action" th:each="o : ${orders}"
                                     th:href="@{'/order/detail/' + ${o.id}}">
                                     <div class="d-flex w-100 justify-content-between">
                                         <h6 class="mb-1">订单号：<span th:text="${o.id}">0</span></h6>
-                                        <small
+                                        <small th:if="${o.createdAt != null}"
                                             th:text="${#temporals.format(o.createdAt, 'yyyy-MM-dd HH:mm:ss')}">时间</small>
                                     </div>
                                     <p class="mb-1">金额：<span class="text-danger"
@@ -184,7 +185,6 @@
         </div>
     </div>
 
-    <!-- 添加Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 

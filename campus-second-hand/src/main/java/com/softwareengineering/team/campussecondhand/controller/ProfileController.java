@@ -5,10 +5,12 @@ import com.softwareengineering.team.campussecondhand.entity.Order;
 import com.softwareengineering.team.campussecondhand.entity.Product;
 import com.softwareengineering.team.campussecondhand.entity.User;
 import com.softwareengineering.team.campussecondhand.entity.UserPassword;
+import com.softwareengineering.team.campussecondhand.entity.CartItem;  // 新增
 import com.softwareengineering.team.campussecondhand.repository.OrderRepository;
 import com.softwareengineering.team.campussecondhand.repository.UserPasswordRepository;
 import com.softwareengineering.team.campussecondhand.service.ProductService;
 import com.softwareengineering.team.campussecondhand.service.UserService;
+import com.softwareengineering.team.campussecondhand.service.CartService; // 新增
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -16,6 +18,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
+import java.util.HashMap;      // 新增
+import java.util.Map;         // 新增
 
 @Controller
 @RequestMapping("/profile")
@@ -25,17 +29,19 @@ public class ProfileController {
     private final OrderRepository orderRepository;
     private final UserPasswordRepository userPasswordRepository;
     private final PasswordEncoder passwordEncoder;
-
+    private final CartService cartService; 
     public ProfileController(UserService userService,
                              ProductService productService,
                              OrderRepository orderRepository,
                              UserPasswordRepository userPasswordRepository,
-                             PasswordEncoder passwordEncoder) {
+                             PasswordEncoder passwordEncoder,
+                             CartService cartService) { 
         this.userService = userService;
         this.productService = productService;
         this.orderRepository = orderRepository;
         this.userPasswordRepository = userPasswordRepository;
         this.passwordEncoder = passwordEncoder;
+        this.cartService = cartService; 
     }
 
     @GetMapping
@@ -46,10 +52,20 @@ public class ProfileController {
 
         List<Product> products = productService.findByUserId(user.getId());
         List<Order> orders = orderRepository.findByUidOrderByCreatedAtDesc(user.getId());
-
+        // 购物车数据（与 /cart 页保持一致）
+        List<CartItem> cartItems = cartService.getCartItems(user.getId());
+        Map<Long, Product> cartProductMap = new HashMap<>();
+        if (cartItems != null) {
+            for (CartItem ci : cartItems) {
+                Product p = productService.findById(ci.getSid());
+                if (p != null) cartProductMap.put(ci.getSid(), p);
+            }
+        }
         model.addAttribute("user", user);
         model.addAttribute("myProducts", products);
         model.addAttribute("orders", orders);
+        model.addAttribute("cartItems", cartItems);              // 新增
+        model.addAttribute("cartProductMap", cartProductMap);    // 新增
         return "profile";
     }
 

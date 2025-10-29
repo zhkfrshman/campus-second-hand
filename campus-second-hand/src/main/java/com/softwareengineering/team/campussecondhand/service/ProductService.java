@@ -7,6 +7,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 public interface ProductService {
+    Page<Product> listAvailable(int page, int size, String q);
     Page<Product> listAvailable(int page, int size);
     Product findById(Long id);
     Product createProduct(String name, Double price, String remark, MultipartFile imageFile, Long uid) throws Exception;

@@ -87,18 +87,14 @@ public class ProductController {
     
     @GetMapping("/list")
     public String list(@RequestParam(defaultValue = "0") int page,
-                       @RequestParam(defaultValue = "12") int size,
+                       @RequestParam(defaultValue = "8") int size, // 一页8个：两排×4列
                        @RequestParam(required = false) String q,
-                       Model m) {
-        Page<Product> pg;
-        if (q == null || q.isBlank()) {
-            pg = productService.listAvailable(page, size);
-        } else {
-            // fallback: use name search via repository method
-            pg = productService.listAvailable(page, size);
-        }
-        m.addAttribute("products", pg.getContent());
-        m.addAttribute("page", pg);
+                       Model model) {
+        Page<Product> result = productService.listAvailable(page, size, q);
+        model.addAttribute("products", result.getContent());
+        model.addAttribute("page", result);
+        // 保留搜索词（Thymeleaf 的 ${param.q} 也能取到，这里只是兜底）
+        model.addAttribute("q", q);
         return "product-list";
     }
     
